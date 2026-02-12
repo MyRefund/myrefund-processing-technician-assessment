@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Processing Technician – Assessment</title>
+<title>My Refund — Processing Technician Assessment</title>
 
 <style>
 :root{
@@ -94,7 +94,10 @@ textarea,input{
   font-size:14px;
 }
 
-textarea{min-height:120px}
+textarea{
+  min-height:120px;
+  resize:vertical;
+}
 
 .checkbox-group{
   margin-top:8px;
@@ -120,6 +123,13 @@ button{
   font-weight:900;
   cursor:pointer;
 }
+
+button:hover{opacity:.9}
+
+@media(max-width:900px){
+  .left{padding:32px 20px}
+  body{background-attachment:scroll}
+}
 </style>
 </head>
 
@@ -128,9 +138,9 @@ button{
 <div class="header">
   <div class="header-inner">
     <div class="brand">
-      <img src="logo.png">
+      <img src="logo.png" alt="My Refund">
       <div class="brand-text">
-        <strong>Processing Technician – Assessment</strong>
+        <strong>Processing Technician Assessment</strong>
       </div>
     </div>
   </div>
@@ -150,11 +160,20 @@ button{
 
 <script>
 const SUBMIT_URL = "https://script.google.com/macros/s/AKfycbzqt1qFnF1Qgff1O7-lWmlSIem5gEcGW8zPRhmUW6HqHtK06bRoABznXuX7EWj7vWfO/exec";
-const storeKey = "processing_technician_test_v1";
+const storeKey = "processing_technician_assessment_v1";
 
-const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
+const data = JSON.parse(localStorage.getItem(storeKey) || {});
+
+// Identify this test clearly
+data.testType = "Processing Technician Assessment";
+
 data.answers = data.answers || {};
-data.timing = data.timing || { startedAt:null, submittedAt:null, totalSeconds:0, perQuestion:{} };
+data.timing = data.timing || {
+  startedAt:null,
+  submittedAt:null,
+  totalSeconds:0,
+  perQuestion:{}
+};
 
 let currentStart = null;
 
@@ -163,10 +182,10 @@ const questions = [
 {
 id:"details",
 title:"Candidate Details",
-instructions:"Enter your full name and email.",
+instructions:"Please enter your full name and email address.",
 render:()=>`
-<input placeholder="Full name" value="${data.name||""}" oninput="saveField('name',this.value)">
-<input placeholder="Email address" value="${data.email||""}" oninput="saveField('email',this.value)">
+<input placeholder="Full name" value="${escapeAttr(data.name||"")}" oninput="saveField('name',this.value)">
+<input placeholder="Email address" value="${escapeAttr(data.email||"")}" oninput="saveField('email',this.value)">
 `
 },
 
@@ -192,12 +211,12 @@ render:()=>`
 {
 id:"numerical",
 title:"Section 2 – Numerical Reasoning",
-instructions:"Write your answers clearly.",
+instructions:"Answer clearly and show your working where relevant.",
 render:()=>`
 <label>How many months did the client NOT receive benefits in the 2025 tax year?</label>
 <textarea oninput="saveAnswer('benefits',this.value)"></textarea>
 
-<label>Calculate total tax payable on $20,000 using the rates provided.</label>
+<label>Calculate total tax payable on $20,000 using the NZ tax rates.</label>
 <textarea oninput="saveAnswer('taxcalc',this.value)"></textarea>
 `
 },
@@ -218,12 +237,12 @@ render:()=>`
 {
 id:"taxyear",
 title:"Section 4 – Tax Knowledge",
-instructions:"Answer the questions below.",
+instructions:"Answer the following questions.",
 render:()=>`
 <label>When does the 2026 New Zealand tax year start and end?</label>
 <textarea oninput="saveAnswer('taxyear',this.value)"></textarea>
 
-<label>Should $150 cash income be declared?</label>
+<label>Should $150 cash income be declared for tax purposes?</label>
 <div class="checkbox-group">
 <label><input type="radio" name="cash" value="Yes" onclick="saveAnswer('cash','Yes')"> Yes</label>
 <label><input type="radio" name="cash" value="No" onclick="saveAnswer('cash','No')"> No</label>
@@ -240,7 +259,9 @@ function saveField(k,v){ data[k]=v; save(); }
 function saveAnswer(k,v){ data.answers[k]=v; save(); }
 
 function startTimer(){
-if(!data.timing.startedAt){ data.timing.startedAt=new Date().toISOString(); }
+if(!data.timing.startedAt){
+data.timing.startedAt=new Date().toISOString();
+}
 currentStart=Date.now();
 }
 
@@ -251,34 +272,57 @@ data.timing.perQuestion[id]=(data.timing.perQuestion[id]||0)+sec;
 save();
 }
 
+function escapeAttr(s){
+return String(s)
+.replace(/&/g,"&amp;")
+.replace(/"/g,"&quot;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;");
+}
+
 function render(){
 const q=questions[i];
+
 document.getElementById("progress").textContent=`Question ${i+1} of ${questions.length}`;
 document.getElementById("nextBtn").textContent=(i===questions.length-1)?"Submit":"Next";
+
 document.getElementById("content").innerHTML=
 `<h2>${q.title}</h2>
 <div class="instructions">${q.instructions}</div>
 ${q.render()}`;
+
 currentStart=Date.now();
 }
 
 function next(){
 const q=questions[i];
-if(i===0){ startTimer(); } else { endTimer(q.id); }
+
+if(i===0){ startTimer(); }
+else{ endTimer(q.id); }
 
 if(i<questions.length-1){
 i++; render();
 }else{
 data.timing.submittedAt=new Date().toISOString();
-data.timing.totalSeconds=Math.round((new Date(data.timing.submittedAt)-new Date(data.timing.startedAt))/1000);
+data.timing.totalSeconds=Math.round(
+(new Date(data.timing.submittedAt)-new Date(data.timing.startedAt))/1000
+);
 save();
 
 fetch(SUBMIT_URL,{
 method:"POST",
-body:new URLSearchParams({payload:JSON.stringify(data)})
+body:new URLSearchParams({
+payload:JSON.stringify(data)
 })
-.then(()=>{ localStorage.removeItem(storeKey); alert("Assessment submitted successfully."); })
-.catch(()=>{ alert("Submission failed."); });
+})
+.then(()=>{
+localStorage.removeItem(storeKey);
+alert("Assessment submitted successfully. Thank you.");
+})
+.catch((error)=>{
+console.error(error);
+alert("Submission failed. Please try again.");
+});
 }
 }
 
