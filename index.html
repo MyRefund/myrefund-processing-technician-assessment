@@ -8,7 +8,6 @@
 <style>
 :root{
   --g0:#094B35;
-  --radius:16px;
 }
 
 *{box-sizing:border-box}
@@ -69,8 +68,7 @@ body{
 .progress{
   font-size:13px;
   font-weight:800;
-  opacity:.9;
-  margin-bottom:10px;
+  margin-bottom:12px;
 }
 
 h2{
@@ -80,8 +78,8 @@ h2{
 
 .instructions{
   font-size:14px;
-  opacity:.95;
   margin-bottom:16px;
+  line-height:1.4;
 }
 
 textarea,input{
@@ -96,16 +94,6 @@ textarea,input{
 
 textarea{
   min-height:120px;
-  resize:vertical;
-}
-
-.checkbox-group{
-  margin-top:8px;
-}
-
-.checkbox-group label{
-  display:block;
-  margin:6px 0;
 }
 
 .actions{
@@ -122,13 +110,6 @@ button{
   padding:10px 26px;
   font-weight:900;
   cursor:pointer;
-}
-
-button:hover{opacity:.9}
-
-@media(max-width:900px){
-  .left{padding:32px 20px}
-  body{background-attachment:scroll}
 }
 </style>
 </head>
@@ -160,11 +141,11 @@ button:hover{opacity:.9}
 
 <script>
 const SUBMIT_URL = "https://script.google.com/macros/s/AKfycbzqt1qFnF1Qgff1O7-lWmlSIem5gEcGW8zPRhmUW6HqHtK06bRoABznXuX7EWj7vWfO/exec";
-const storeKey = "processing_technician_assessment_v1";
+const storeKey = "processing_technician_assessment_v2";
 
-const data = JSON.parse(localStorage.getItem(storeKey) || {});
+const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
 
-// Identify this test clearly
+// Identify test type
 data.testType = "Processing Technician Assessment";
 
 data.answers = data.answers || {};
@@ -182,27 +163,24 @@ const questions = [
 {
 id:"details",
 title:"Candidate Details",
-instructions:"Please enter your full name and email address.",
+instructions:"Enter your full name and email address.",
 render:()=>`
-<input placeholder="Full name" value="${escapeAttr(data.name||"")}" oninput="saveField('name',this.value)">
-<input placeholder="Email address" value="${escapeAttr(data.email||"")}" oninput="saveField('email',this.value)">
+<input placeholder="Full name" value="${data.name||""}" oninput="saveField('name',this.value)">
+<input placeholder="Email address" value="${data.email||""}" oninput="saveField('email',this.value)">
 `
 },
 
 {
 id:"shortcuts",
-title:"Section 1 – Keyboard Shortcuts",
+title:"Keyboard Shortcuts",
 instructions:"Write the correct shortcut key(s) for each action.",
 render:()=>`
 <label>Copy selected text:</label>
 <input oninput="saveAnswer('copy',this.value)">
-
 <label>Cut selected text:</label>
 <input oninput="saveAnswer('cut',this.value)">
-
 <label>Paste copied text:</label>
 <input oninput="saveAnswer('paste',this.value)">
-
 <label>Select all text or data:</label>
 <input oninput="saveAnswer('selectall',this.value)">
 `
@@ -210,25 +188,23 @@ render:()=>`
 
 {
 id:"numerical",
-title:"Section 2 – Numerical Reasoning",
-instructions:"Answer clearly and show your working where relevant.",
+title:"Numerical Reasoning",
+instructions:"Answer clearly and show working where relevant.",
 render:()=>`
 <label>How many months did the client NOT receive benefits in the 2025 tax year?</label>
 <textarea oninput="saveAnswer('benefits',this.value)"></textarea>
-
-<label>Calculate total tax payable on $20,000 using the NZ tax rates.</label>
+<label>Calculate total tax payable on $20,000 using NZ tax rates.</label>
 <textarea oninput="saveAnswer('taxcalc',this.value)"></textarea>
 `
 },
 
 {
 id:"written",
-title:"Section 3 – Written Communication",
+title:"Written Communication",
 instructions:"Rewrite each sentence in clear, professional English.",
 render:()=>`
 <label>“Your refund hasn’t come yet, IRD is just a bit slow, it should arrive soon.”</label>
 <textarea oninput="saveAnswer('rewrite1',this.value)"></textarea>
-
 <label>“Oops, the tax codes were off, that’s why there’s a bill.”</label>
 <textarea oninput="saveAnswer('rewrite2',this.value)"></textarea>
 `
@@ -236,17 +212,14 @@ render:()=>`
 
 {
 id:"taxyear",
-title:"Section 4 – Tax Knowledge",
+title:"Tax Knowledge",
 instructions:"Answer the following questions.",
 render:()=>`
 <label>When does the 2026 New Zealand tax year start and end?</label>
 <textarea oninput="saveAnswer('taxyear',this.value)"></textarea>
-
-<label>Should $150 cash income be declared for tax purposes?</label>
-<div class="checkbox-group">
-<label><input type="radio" name="cash" value="Yes" onclick="saveAnswer('cash','Yes')"> Yes</label>
-<label><input type="radio" name="cash" value="No" onclick="saveAnswer('cash','No')"> No</label>
-</div>
+<label>Should $150 cash income be declared?</label>
+<input type="radio" name="cash" value="Yes" onclick="saveAnswer('cash','Yes')"> Yes
+<input type="radio" name="cash" value="No" onclick="saveAnswer('cash','No')"> No
 `
 }
 
@@ -272,17 +245,8 @@ data.timing.perQuestion[id]=(data.timing.perQuestion[id]||0)+sec;
 save();
 }
 
-function escapeAttr(s){
-return String(s)
-.replace(/&/g,"&amp;")
-.replace(/"/g,"&quot;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;");
-}
-
 function render(){
 const q=questions[i];
-
 document.getElementById("progress").textContent=`Question ${i+1} of ${questions.length}`;
 document.getElementById("nextBtn").textContent=(i===questions.length-1)?"Submit":"Next";
 
@@ -317,11 +281,11 @@ payload:JSON.stringify(data)
 })
 .then(()=>{
 localStorage.removeItem(storeKey);
-alert("Assessment submitted successfully. Thank you.");
+alert("Assessment submitted successfully.");
 })
 .catch((error)=>{
 console.error(error);
-alert("Submission failed. Please try again.");
+alert("Submission failed.");
 });
 }
 }
