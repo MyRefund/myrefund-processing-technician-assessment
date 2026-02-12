@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Processing Technician – Assessment</title>
+
+<style>
+:root{
+  --g0:#094B35;
+  --radius:16px;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:"Okta Neue", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:#fff;
+  background:
+    url("My Refund-Hero Images-02 (1).jpg")
+    center center / cover
+    no-repeat fixed;
+}
+
+.header{
+  background:var(--g0);
+  padding:16px 24px;
+}
+
+.header-inner{
+  max-width:1400px;
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.brand img{height:28px}
+
+.brand-text strong{
+  font-size:16px;
+  font-weight:900;
+}
+
+.page{
+  min-height:calc(100vh - 72px);
+  display:flex;
+}
+
+.left{
+  padding:56px;
+  width:100%;
+}
+
+.card{
+  background:var(--g0);
+  border-radius:18px;
+  padding:28px;
+  max-width:760px;
+  box-shadow:0 20px 40px rgba(0,0,0,.35);
+}
+
+.progress{
+  font-size:13px;
+  font-weight:800;
+  opacity:.9;
+  margin-bottom:10px;
+}
+
+h2{
+  margin:0 0 10px 0;
+  font-weight:900;
+}
+
+.instructions{
+  font-size:14px;
+  opacity:.95;
+  margin-bottom:16px;
+}
+
+textarea,input{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border-radius:8px;
+  border:none;
+  font-family:inherit;
+  font-size:14px;
+}
+
+textarea{min-height:120px}
+
+.checkbox-group{
+  margin-top:8px;
+}
+
+.checkbox-group label{
+  display:block;
+  margin:6px 0;
+}
+
+.actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:20px;
+}
+
+button{
+  background:#fff;
+  color:var(--g0);
+  border:none;
+  border-radius:999px;
+  padding:10px 26px;
+  font-weight:900;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="brand">
+      <img src="logo.png">
+      <div class="brand-text">
+        <strong>Processing Technician – Assessment</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div class="left">
+    <div class="card">
+      <div class="progress" id="progress"></div>
+      <div id="content"></div>
+      <div class="actions">
+        <button id="nextBtn" onclick="next()">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUBMIT_URL = "https://script.google.com/macros/s/AKfycbzqt1qFnF1Qgff1O7-lWmlSIem5gEcGW8zPRhmUW6HqHtK06bRoABznXuX7EWj7vWfO/exec";
+const storeKey = "processing_technician_test_v1";
+
+const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
+data.answers = data.answers || {};
+data.timing = data.timing || { startedAt:null, submittedAt:null, totalSeconds:0, perQuestion:{} };
+
+let currentStart = null;
+
+const questions = [
+
+{
+id:"details",
+title:"Candidate Details",
+instructions:"Enter your full name and email.",
+render:()=>`
+<input placeholder="Full name" value="${data.name||""}" oninput="saveField('name',this.value)">
+<input placeholder="Email address" value="${data.email||""}" oninput="saveField('email',this.value)">
+`
+},
+
+{
+id:"shortcuts",
+title:"Section 1 – Keyboard Shortcuts",
+instructions:"Write the correct shortcut key(s) for each action.",
+render:()=>`
+<label>Copy selected text:</label>
+<input oninput="saveAnswer('copy',this.value)">
+
+<label>Cut selected text:</label>
+<input oninput="saveAnswer('cut',this.value)">
+
+<label>Paste copied text:</label>
+<input oninput="saveAnswer('paste',this.value)">
+
+<label>Select all text or data:</label>
+<input oninput="saveAnswer('selectall',this.value)">
+`
+},
+
+{
+id:"numerical",
+title:"Section 2 – Numerical Reasoning",
+instructions:"Write your answers clearly.",
+render:()=>`
+<label>How many months did the client NOT receive benefits in the 2025 tax year?</label>
+<textarea oninput="saveAnswer('benefits',this.value)"></textarea>
+
+<label>Calculate total tax payable on $20,000 using the rates provided.</label>
+<textarea oninput="saveAnswer('taxcalc',this.value)"></textarea>
+`
+},
+
+{
+id:"written",
+title:"Section 3 – Written Communication",
+instructions:"Rewrite each sentence in clear, professional English.",
+render:()=>`
+<label>“Your refund hasn’t come yet, IRD is just a bit slow, it should arrive soon.”</label>
+<textarea oninput="saveAnswer('rewrite1',this.value)"></textarea>
+
+<label>“Oops, the tax codes were off, that’s why there’s a bill.”</label>
+<textarea oninput="saveAnswer('rewrite2',this.value)"></textarea>
+`
+},
+
+{
+id:"taxyear",
+title:"Section 4 – Tax Knowledge",
+instructions:"Answer the questions below.",
+render:()=>`
+<label>When does the 2026 New Zealand tax year start and end?</label>
+<textarea oninput="saveAnswer('taxyear',this.value)"></textarea>
+
+<label>Should $150 cash income be declared?</label>
+<div class="checkbox-group">
+<label><input type="radio" name="cash" value="Yes" onclick="saveAnswer('cash','Yes')"> Yes</label>
+<label><input type="radio" name="cash" value="No" onclick="saveAnswer('cash','No')"> No</label>
+</div>
+`
+}
+
+];
+
+let i=0;
+
+function save(){ localStorage.setItem(storeKey, JSON.stringify(data)); }
+function saveField(k,v){ data[k]=v; save(); }
+function saveAnswer(k,v){ data.answers[k]=v; save(); }
+
+function startTimer(){
+if(!data.timing.startedAt){ data.timing.startedAt=new Date().toISOString(); }
+currentStart=Date.now();
+}
+
+function endTimer(id){
+if(!currentStart) return;
+const sec=Math.round((Date.now()-currentStart)/1000);
+data.timing.perQuestion[id]=(data.timing.perQuestion[id]||0)+sec;
+save();
+}
+
+function render(){
+const q=questions[i];
+document.getElementById("progress").textContent=`Question ${i+1} of ${questions.length}`;
+document.getElementById("nextBtn").textContent=(i===questions.length-1)?"Submit":"Next";
+document.getElementById("content").innerHTML=
+`<h2>${q.title}</h2>
+<div class="instructions">${q.instructions}</div>
+${q.render()}`;
+currentStart=Date.now();
+}
+
+function next(){
+const q=questions[i];
+if(i===0){ startTimer(); } else { endTimer(q.id); }
+
+if(i<questions.length-1){
+i++; render();
+}else{
+data.timing.submittedAt=new Date().toISOString();
+data.timing.totalSeconds=Math.round((new Date(data.timing.submittedAt)-new Date(data.timing.startedAt))/1000);
+save();
+
+fetch(SUBMIT_URL,{
+method:"POST",
+body:new URLSearchParams({payload:JSON.stringify(data)})
+})
+.then(()=>{ localStorage.removeItem(storeKey); alert("Assessment submitted successfully."); })
+.catch(()=>{ alert("Submission failed."); });
+}
+}
+
+render();
+</script>
+
+</body>
+</html>
