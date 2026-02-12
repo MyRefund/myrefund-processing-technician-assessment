@@ -3,59 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>My Refund — Processing Technician Assessment</title>
+<title>My Refund — Processing Assessment</title>
 
 <style>
-:root{
-  --g0:#094B35;
-}
-
+:root{ --g0:#094B35; }
 *{box-sizing:border-box}
 
 body{
   margin:0;
   font-family:"Okta Neue", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color:#fff;
-  background:
-    url("My Refund-Hero Images-02 (1).jpg")
-    center center / cover
-    no-repeat fixed;
+  background:url("My Refund-Hero Images-02 (1).jpg") center center / cover no-repeat fixed;
 }
 
-.header{
-  background:var(--g0);
-  padding:16px 24px;
-}
+.header{ background:var(--g0); padding:16px 24px; }
+.header-inner{ max-width:1400px; margin:0 auto; display:flex; align-items:center; }
+.brand{ display:flex; align-items:center; gap:14px; }
+.brand img{ height:28px }
+.brand-text strong{ font-size:16px; font-weight:900; }
 
-.header-inner{
-  max-width:1400px;
-  margin:0 auto;
-  display:flex;
-  align-items:center;
-}
-
-.brand{
-  display:flex;
-  align-items:center;
-  gap:14px;
-}
-
-.brand img{height:28px}
-
-.brand-text strong{
-  font-size:16px;
-  font-weight:900;
-}
-
-.page{
-  min-height:calc(100vh - 72px);
-  display:flex;
-}
-
-.left{
-  padding:56px;
-  width:100%;
-}
+.page{ min-height:calc(100vh - 72px); display:flex; }
+.left{ padding:56px; width:100%; }
 
 .card{
   background:var(--g0);
@@ -65,48 +33,17 @@ body{
   box-shadow:0 20px 40px rgba(0,0,0,.35);
 }
 
-.progress{
-  font-size:13px;
-  font-weight:800;
-  opacity:.95;
-  margin-bottom:10px;
-}
-
-h2{
-  margin:0 0 10px 0;
-  font-weight:900;
-}
+.progress{ font-size:13px; font-weight:800; margin-bottom:12px; }
+h2{ margin:0 0 10px 0; font-weight:900; }
 
 .instructions{
   font-size:14px;
-  opacity:.95;
   margin-bottom:14px;
   line-height:1.45;
+  white-space:pre-line;
 }
 
-label{
-  display:block;
-  margin-top:12px;
-  font-weight:800;
-  font-size:14px;
-  line-height:1.35;
-}
-
-.help{
-  margin-top:6px;
-  font-size:13px;
-  opacity:.9;
-  line-height:1.35;
-}
-
-blockquote{
-  background:rgba(255,255,255,.1);
-  padding:14px 16px;
-  border-left:4px solid #fff;
-  margin:12px 0 10px 0;
-  font-size:14px;
-  white-space:pre-wrap;
-}
+label{ display:block; margin-top:12px; font-weight:800; font-size:14px; }
 
 textarea,input{
   width:100%;
@@ -116,32 +53,6 @@ textarea,input{
   border:none;
   font-family:inherit;
   font-size:14px;
-}
-
-textarea{
-  min-height:120px;
-  resize:vertical;
-}
-
-.choice-group{
-  margin-top:10px;
-  padding:10px 12px;
-  background:rgba(255,255,255,.08);
-  border-radius:10px;
-}
-
-.choice{
-  display:flex;
-  align-items:flex-start;
-  gap:10px;
-  padding:6px 0;
-  font-size:14px;
-  line-height:1.35;
-}
-
-.choice input{
-  width:auto;
-  margin-top:2px;
 }
 
 .actions{
@@ -158,9 +69,40 @@ button{
   padding:10px 26px;
   font-weight:900;
   cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+button:disabled{opacity:0.75; cursor:not-allowed;}
+
+.spinner{
+  width:16px;
+  height:16px;
+  border:3px solid rgba(9,75,53,.22);
+  border-top:3px solid var(--g0);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+.success-screen{
+  text-align:center;
+  padding:40px 20px;
 }
 
-button:hover{opacity:.9}
+.success-screen h2{
+  font-size:22px;
+  margin-bottom:12px;
+}
+
+.error-banner{
+  display:none;
+  margin-top:12px;
+  padding:10px 12px;
+  border-radius:10px;
+  background:rgba(255,255,255,.14);
+  font-size:13px;
+}
 
 @media(max-width:900px){
   .left{padding:32px 20px}
@@ -176,7 +118,7 @@ button:hover{opacity:.9}
     <div class="brand">
       <img src="logo.png" alt="My Refund">
       <div class="brand-text">
-        <strong>Processing Technician Assessment</strong>
+        <strong>Processing Assessment</strong>
       </div>
     </div>
   </div>
@@ -184,9 +126,12 @@ button:hover{opacity:.9}
 
 <div class="page">
   <div class="left">
-    <div class="card">
+    <div class="card" id="card">
       <div class="progress" id="progress"></div>
       <div id="content"></div>
+
+      <div id="errorBanner" class="error-banner"></div>
+
       <div class="actions">
         <button id="nextBtn" onclick="next()">Next</button>
       </div>
@@ -196,237 +141,137 @@ button:hover{opacity:.9}
 
 <script>
 const SUBMIT_URL = "https://script.google.com/macros/s/AKfycbzqt1qFnF1Qgff1O7-lWmlSIem5gEcGW8zPRhmUW6HqHtK06bRoABznXuX7EWj7vWfO/exec";
-const storeKey = "processing_technician_assessment_v3";
+const storeKey = "processing_assessment_v2";
 
 const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
-data.testType = "Processing Technician Assessment";
-
+data.testType = "Processing Assessment";
 data.answers = data.answers || {};
-data.timing = data.timing || {
-  startedAt:null,
-  submittedAt:null,
-  totalSeconds:0,
-  perQuestion:{}
-};
+data.timing  = data.timing  || { startedAt:null, submittedAt:null, totalSeconds:0, perQuestion:{} };
 
 let currentStart = null;
-
-const questions = [
-  {
-    id:"details",
-    title:"Candidate details",
-    instructions:"Please enter your details so we know who this assessment belongs to.",
-    render:()=>`
-      <input placeholder="Full name" value="${escapeAttr(data.name||"")}" oninput="saveField('name',this.value)">
-      <input placeholder="Email address" value="${escapeAttr(data.email||"")}" oninput="saveField('email',this.value)">
-    `
-  },
-
-  {
-    id:"s1",
-    title:"Section 1: Shortcut Keys – Keyboard",
-    instructions:"Write the correct shortcut key(s) for each action on a keyboard.",
-    render:()=>`
-      <label>Copy selected text:</label>
-      <input value="${escapeAttr(data.answers.copy||"")}" oninput="saveAnswer('copy',this.value)">
-
-      <label>Cut selected text:</label>
-      <input value="${escapeAttr(data.answers.cut||"")}" oninput="saveAnswer('cut',this.value)">
-
-      <label>Paste copied text:</label>
-      <input value="${escapeAttr(data.answers.paste||"")}" oninput="saveAnswer('paste',this.value)">
-
-      <label>Select all text or data:</label>
-      <input value="${escapeAttr(data.answers.selectall||"")}" oninput="saveAnswer('selectall',this.value)">
-    `
-  },
-
-  {
-    id:"s2",
-    title:"Section 2: Numerical Reasoning",
-    instructions:"Write your answers in the space provided.",
-    render:()=>`
-      <label>1) A client got MSD benefit in June 2024, September 2024, and January 2024. How many months did they not receive benefits in the 2025 tax year?</label>
-      <textarea placeholder="Answer..." oninput="saveAnswer('benefits',this.value)">${escapeText(data.answers.benefits||"")}</textarea>
-
-      <label>2) Sam earned $20,000 in taxable income. The tax rates are:</label>
-      <blockquote>• 10% on income from $0 – $10,000
-• 20% on income above $10,000</blockquote>
-      <div class="help">Calculate the total tax payable.</div>
-      <textarea placeholder="Answer (and working if needed)..." oninput="saveAnswer('taxcalc',this.value)">${escapeText(data.answers.taxcalc||"")}</textarea>
-    `
-  },
-
-  {
-    id:"s3",
-    title:"Section 3: Written Communication",
-    instructions:"Rewrite each sentence in clear, professional English.",
-    render:()=>`
-      <label>1) “Your refund hasn’t come yet, IRD is just a bit slow, it should arrive soon.”</label>
-      <textarea placeholder="Answer..." oninput="saveAnswer('rewrite1',this.value)">${escapeText(data.answers.rewrite1||"")}</textarea>
-
-      <label>2) “Oops, the tax codes were off, that’s why there’s a bill.”</label>
-      <textarea placeholder="Answer..." oninput="saveAnswer('rewrite2',this.value)">${escapeText(data.answers.rewrite2||"")}</textarea>
-    `
-  },
-
-  {
-    id:"s4",
-    title:"Section 4: Technical Tax Knowledge",
-    instructions:"Write your answers in the space provided. For multiple-choice questions, tick all options that apply.",
-    render:()=>`
-      <label>1) When does the 2026 New Zealand tax year start and end?</label>
-      <textarea placeholder="Answer..." oninput="saveAnswer('taxyear',this.value)">${escapeText(data.answers.taxyear||"")}</textarea>
-
-      <label>2) A client earns income only from salaries. Which of the following expenses can they claim against their tax return?</label>
-      <div class="choice-group">
-        ${checkbox("salary_expenses","Income protection insurance premiums")}
-        ${checkbox("salary_expenses","Rent")}
-        ${checkbox("salary_expenses","Tax agent fees")}
-        ${checkbox("salary_expenses","Fuel expenses from home to work")}
-        ${checkbox("salary_expenses","Mortgage payments")}
-      </div>
-
-      <label>3) Which types of income need to be declared to Inland Revenue (IRD)?</label>
-      <div class="choice-group">
-        ${checkbox("income_types","Gifts from friends")}
-        ${checkbox("income_types","Self-employment income")}
-        ${checkbox("income_types","Lottery winnings")}
-        ${checkbox("income_types","Overseas income")}
-        ${checkbox("income_types","Rental income")}
-      </div>
-
-      <label>4) A client earned $150 from a cash job during the 2025 tax year. Should this income be declared to IRD?</label>
-      <div class="choice-group">
-        ${radio("cash_declared","Yes")}
-        ${radio("cash_declared","No")}
-      </div>
-    `
-  }
-];
-
+let isSubmitting = false;
 let i = 0;
 
-function save(){
-  localStorage.setItem(storeKey, JSON.stringify(data));
+/* ===== EXAMPLE QUESTIONS (keep your full set here) ===== */
+const questions = [
+
+{
+id:"details",
+title:"Candidate Details",
+instructions:"Enter your full name and email address.",
+render:()=>`
+<input placeholder="Full name" value="${escapeAttr(data.name||"")}" oninput="saveField('name',this.value)">
+<input placeholder="Email address" value="${escapeAttr(data.email||"")}" oninput="saveField('email',this.value)">
+`
+},
+
+{
+id:"s1",
+title:"Keyboard Shortcuts",
+instructions:"What is the shortcut for Copy?",
+render:()=>`
+<input placeholder="Your answer" oninput="saveAnswer('copy',this.value)">
+`
 }
 
-function saveField(k,v){
-  data[k]=v;
-  save();
+/* KEEP YOUR FULL PROCESSING QUESTION SET HERE */
+
+];
+
+function save(){ localStorage.setItem(storeKey, JSON.stringify(data)); }
+function saveField(k,v){ data[k]=v; save(); }
+function saveAnswer(k,v){ data.answers[k]=v; save(); }
+
+function escapeAttr(s){
+return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
-function saveAnswer(k,v){
-  data.answers[k]=v;
-  save();
+function showError(msg){
+const el=document.getElementById("errorBanner");
+el.style.display="block";
+el.textContent=msg;
+}
+function clearError(){
+const el=document.getElementById("errorBanner");
+el.style.display="none";
+el.textContent="";
 }
 
-function toggleInArray(key, value, checked){
-  const cur = Array.isArray(data.answers[key]) ? data.answers[key].slice() : [];
-  const idx = cur.indexOf(value);
-  if(checked && idx === -1) cur.push(value);
-  if(!checked && idx !== -1) cur.splice(idx,1);
-  data.answers[key] = cur;
-  save();
+function showSuccess(){
+document.getElementById("card").innerHTML=`
+<div class="success-screen">
+<h2>Assessment Submitted ✓</h2>
+<p>Thank you for completing the assessment.</p>
+<p>We will review your submission and be in touch.</p>
+</div>`;
 }
 
 function startTimer(){
-  if(!data.timing.startedAt){
-    data.timing.startedAt = new Date().toISOString();
-  }
-  currentStart = Date.now();
+if(!data.timing.startedAt) data.timing.startedAt=new Date().toISOString();
+currentStart=Date.now();
 }
-
 function endTimer(id){
-  if(!currentStart) return;
-  const sec = Math.round((Date.now()-currentStart)/1000);
-  data.timing.perQuestion[id] = (data.timing.perQuestion[id]||0) + sec;
-  save();
-}
-
-function escapeAttr(s){
-  return String(s)
-    .replace(/&/g,"&amp;")
-    .replace(/"/g,"&quot;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;");
-}
-
-function escapeText(s){
-  return String(s)
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;");
-}
-
-function checkbox(key, label){
-  const cur = Array.isArray(data.answers[key]) ? data.answers[key] : [];
-  const checked = cur.includes(label) ? "checked" : "";
-  const safeLabel = escapeAttr(label);
-  return `
-    <div class="choice">
-      <input type="checkbox" ${checked} onchange="toggleInArray('${key}','${safeLabel}',this.checked)">
-      <div>${escapeText(label)}</div>
-    </div>
-  `;
-}
-
-function radio(key, label){
-  const checked = (data.answers[key] === label) ? "checked" : "";
-  const safeLabel = escapeAttr(label);
-  return `
-    <div class="choice">
-      <input type="radio" name="${key}" ${checked} onclick="saveAnswer('${key}','${safeLabel}')">
-      <div>${escapeText(label)}</div>
-    </div>
-  `;
+if(!currentStart) return;
+const sec=Math.round((Date.now()-currentStart)/1000);
+data.timing.perQuestion[id]=(data.timing.perQuestion[id]||0)+sec;
+save();
 }
 
 function render(){
-  const q = questions[i];
-  document.getElementById("progress").textContent = `Question ${i+1} of ${questions.length}`;
-  document.getElementById("nextBtn").textContent = (i===questions.length-1) ? "Submit" : "Next";
+clearError();
+const q=questions[i];
+document.getElementById("progress").textContent=`Question ${i+1} of ${questions.length}`;
+document.getElementById("nextBtn").textContent=(i===questions.length-1)?"Submit":"Next";
+document.getElementById("content").innerHTML=
+`<h2>${q.title}</h2>
+<div class="instructions">${q.instructions}</div>
+${q.render()}`;
+currentStart=Date.now();
+}
 
-  document.getElementById("content").innerHTML =
-    `<h2>${q.title}</h2>
-     <div class="instructions">${q.instructions}</div>
-     ${q.render()}`;
+async function submitAll(){
+const btn=document.getElementById("nextBtn");
+isSubmitting=true;
 
-  currentStart = Date.now();
+btn.disabled=true;
+btn.innerHTML=`<div class="spinner"></div> Submitting...`;
+
+data.timing.submittedAt=new Date().toISOString();
+data.timing.totalSeconds=Math.round(
+(new Date(data.timing.submittedAt)-new Date(data.timing.startedAt))/1000
+);
+save();
+
+try{
+await fetch(SUBMIT_URL,{
+method:"POST",
+body:new URLSearchParams({payload:JSON.stringify(data)})
+});
+localStorage.removeItem(storeKey);
+showSuccess();
+}catch(err){
+isSubmitting=false;
+btn.disabled=false;
+btn.textContent="Submit";
+showError("Submission failed. Please try again.");
+}
 }
 
 function next(){
-  const q = questions[i];
+if(isSubmitting) return;
 
-  if(i===0){
-    startTimer();
-  } else {
-    endTimer(q.id);
-  }
+const q=questions[i];
 
-  if(i < questions.length-1){
-    i++;
-    render();
-  } else {
-    data.timing.submittedAt = new Date().toISOString();
-    data.timing.totalSeconds = Math.round(
-      (new Date(data.timing.submittedAt) - new Date(data.timing.startedAt)) / 1000
-    );
-    save();
+if(i===0){ startTimer(); }
+else{ endTimer(q.id); }
 
-    fetch(SUBMIT_URL, {
-      method:"POST",
-      body: new URLSearchParams({ payload: JSON.stringify(data) })
-    })
-    .then(() => {
-      localStorage.removeItem(storeKey);
-      alert("Assessment submitted successfully. Thank you.");
-    })
-    .catch((error) => {
-      console.error("Submission error:", error);
-      alert("Submission failed. Please try again.");
-    });
-  }
+if(i<questions.length-1){
+i++;
+render();
+return;
+}
+
+submitAll();
 }
 
 render();
