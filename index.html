@@ -11,7 +11,7 @@
 
 body{
   margin:0;
-  font-family:"Okta Neue", system-ui, -apple-system, -Segoe UI, Roboto, Arial, sans-serif;
+  font-family:"Okta Neue", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color:#fff;
   background:url("My Refund-Hero Images-02 (1).jpg") center center / cover no-repeat fixed;
 }
@@ -42,8 +42,6 @@ h2{ margin:0 0 10px 0; font-weight:900; }
   line-height:1.45;
   white-space:pre-line;
 }
-
-label{ display:block; margin-top:12px; font-weight:800; font-size:14px; }
 
 textarea,input{
   width:100%;
@@ -90,11 +88,6 @@ button:disabled{opacity:0.75; cursor:not-allowed;}
   padding:40px 20px;
 }
 
-.success-screen h2{
-  font-size:22px;
-  margin-bottom:12px;
-}
-
 .error-banner{
   display:none;
   margin-top:12px;
@@ -102,11 +95,6 @@ button:disabled{opacity:0.75; cursor:not-allowed;}
   border-radius:10px;
   background:rgba(255,255,255,.14);
   font-size:13px;
-}
-
-@media(max-width:900px){
-  .left{padding:32px 20px}
-  body{background-attachment:scroll}
 }
 </style>
 </head>
@@ -129,24 +117,23 @@ button:disabled{opacity:0.75; cursor:not-allowed;}
     <div class="card" id="card">
       <div class="progress" id="progress"></div>
       <div id="content"></div>
-
       <div id="errorBanner" class="error-banner"></div>
 
       <div class="actions">
-        <button id="nextBtn">Next</button>
+        <button id="actionBtn">Next</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-const SUBMIT_URL = "https://script.google.com/macros/s/AKfycbzqt1qFnF1Qgff1O7-lWmlSIem5gEcGW8zPRhmUW6HqHtK06bRoABznXuX7EWj7vWfO/exec";
+const SUBMIT_URL = "YOUR_GOOGLE_SCRIPT_URL";
 const storeKey = "processing_assessment_v2";
 
 const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
 data.testType = "Processing Assessment";
 data.answers = data.answers || {};
-data.timing  = data.timing  || { startedAt:null, submittedAt:null, totalSeconds:0, perQuestion:{} };
+data.timing  = data.timing || { startedAt:null, submittedAt:null, totalSeconds:0, perQuestion:{} };
 
 let currentStart = null;
 let isSubmitting = false;
@@ -159,8 +146,10 @@ id:"details",
 title:"Candidate Details",
 instructions:"Enter your full name and email address.",
 render:()=>`
-<input placeholder="Full name" value="${escapeAttr(data.name||"")}" oninput="saveField('name',this.value)">
-<input placeholder="Email address" value="${escapeAttr(data.email||"")}" oninput="saveField('email',this.value)">
+<input placeholder="Full name" value="${escape(data.name||"")}" 
+oninput="saveField('name',this.value)">
+<input placeholder="Email address" value="${escape(data.email||"")}" 
+oninput="saveField('email',this.value)">
 `
 },
 
@@ -169,7 +158,8 @@ id:"s1",
 title:"Keyboard Shortcuts",
 instructions:"What is the shortcut for Copy?",
 render:()=>`
-<input placeholder="Your answer" value="${escapeAttr(data.answers.copy||"")}" oninput="saveAnswer('copy',this.value)">
+<input placeholder="Your answer" value="${escape(data.answers.copy||"")}" 
+oninput="saveAnswer('copy',this.value)">
 `
 }
 
@@ -179,48 +169,17 @@ function save(){ localStorage.setItem(storeKey, JSON.stringify(data)); }
 function saveField(k,v){ data[k]=v; save(); }
 function saveAnswer(k,v){ data.answers[k]=v; save(); }
 
-function escapeAttr(s){
-return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-}
-
-function showError(msg){
-const el=document.getElementById("errorBanner");
-el.style.display="block";
-el.textContent=msg;
-}
-
-function clearError(){
-const el=document.getElementById("errorBanner");
-el.style.display="none";
-el.textContent="";
-}
-
-function showSuccess(){
-document.getElementById("card").innerHTML=`
-<div class="success-screen">
-<h2>Assessment Submitted ✓</h2>
-<p>Thank you for completing the assessment.</p>
-<p>We will review your submission and be in touch.</p>
-</div>`;
-}
-
-function startTimer(){
-if(!data.timing.startedAt)
-  data.timing.startedAt=new Date().toISOString();
-currentStart=Date.now();
-}
-
-function endTimer(id){
-if(!currentStart) return;
-const sec=Math.round((Date.now()-currentStart)/1000);
-data.timing.perQuestion[id]=(data.timing.perQuestion[id]||0)+sec;
-save();
+function escape(s){
+return String(s)
+.replace(/&/g,"&amp;")
+.replace(/"/g,"&quot;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;");
 }
 
 function render(){
-clearError();
 const q=questions[i];
-const btn=document.getElementById("nextBtn");
+const btn=document.getElementById("actionBtn");
 
 document.getElementById("progress").textContent=
 `Question ${i+1} of ${questions.length}`;
@@ -232,35 +191,42 @@ ${q.render()}`;
 
 currentStart=Date.now();
 
-if(i===questions.length-1){
+if(i === questions.length - 1){
   btn.textContent="Submit";
-  btn.onclick=submitAll;
+  btn.onclick=submitAssessment;
 }else{
   btn.textContent="Next";
-  btn.onclick=next;
+  btn.onclick=goNext;
 }
 }
 
-function next(){
+function goNext(){
 if(isSubmitting) return;
 
-const q=questions[i];
-
-if(i===0){ startTimer(); }
-else{ endTimer(q.id); }
-
+endTimer(questions[i].id);
 i++;
 render();
 }
 
-async function submitAll(){
+function startTimer(){
+if(!data.timing.startedAt)
+  data.timing.startedAt=new Date().toISOString();
+}
+
+function endTimer(id){
+if(!currentStart) return;
+const sec=Math.round((Date.now()-currentStart)/1000);
+data.timing.perQuestion[id]=(data.timing.perQuestion[id]||0)+sec;
+save();
+}
+
+async function submitAssessment(){
 if(isSubmitting) return;
 
-const btn=document.getElementById("nextBtn");
 isSubmitting=true;
-
 endTimer(questions[i].id);
 
+const btn=document.getElementById("actionBtn");
 btn.disabled=true;
 btn.innerHTML=`<div class="spinner"></div> Submitting...`;
 
@@ -277,15 +243,21 @@ method:"POST",
 body:new URLSearchParams({payload:JSON.stringify(data)})
 });
 localStorage.removeItem(storeKey);
-showSuccess();
-}catch(err){
+document.getElementById("card").innerHTML=`
+<div class="success-screen">
+<h2>Assessment Submitted ✓</h2>
+<p>Thank you for completing the assessment.</p>
+<p>We will review your submission and be in touch.</p>
+</div>`;
+}catch(e){
 isSubmitting=false;
 btn.disabled=false;
 btn.textContent="Submit";
-showError("Submission failed. Please try again.");
+alert("Submission failed. Please try again.");
 }
 }
 
+startTimer();
 render();
 </script>
 
