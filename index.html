@@ -11,7 +11,7 @@
 
 body{
   margin:0;
-  font-family:"Okta Neue", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family:"Okta Neue", system-ui, -apple-system, -Segoe UI, Roboto, Arial, sans-serif;
   color:#fff;
   background:url("My Refund-Hero Images-02 (1).jpg") center center / cover no-repeat fixed;
 }
@@ -133,7 +133,7 @@ button:disabled{opacity:0.75; cursor:not-allowed;}
       <div id="errorBanner" class="error-banner"></div>
 
       <div class="actions">
-        <button id="nextBtn" onclick="next()">Next</button>
+        <button id="nextBtn">Next</button>
       </div>
     </div>
   </div>
@@ -152,7 +152,6 @@ let currentStart = null;
 let isSubmitting = false;
 let i = 0;
 
-/* ===== EXAMPLE QUESTIONS (keep your full set here) ===== */
 const questions = [
 
 {
@@ -170,11 +169,9 @@ id:"s1",
 title:"Keyboard Shortcuts",
 instructions:"What is the shortcut for Copy?",
 render:()=>`
-<input placeholder="Your answer" oninput="saveAnswer('copy',this.value)">
+<input placeholder="Your answer" value="${escapeAttr(data.answers.copy||"")}" oninput="saveAnswer('copy',this.value)">
 `
 }
-
-/* KEEP YOUR FULL PROCESSING QUESTION SET HERE */
 
 ];
 
@@ -191,6 +188,7 @@ const el=document.getElementById("errorBanner");
 el.style.display="block";
 el.textContent=msg;
 }
+
 function clearError(){
 const el=document.getElementById("errorBanner");
 el.style.display="none";
@@ -207,9 +205,11 @@ document.getElementById("card").innerHTML=`
 }
 
 function startTimer(){
-if(!data.timing.startedAt) data.timing.startedAt=new Date().toISOString();
+if(!data.timing.startedAt)
+  data.timing.startedAt=new Date().toISOString();
 currentStart=Date.now();
 }
+
 function endTimer(id){
 if(!currentStart) return;
 const sec=Math.round((Date.now()-currentStart)/1000);
@@ -220,18 +220,46 @@ save();
 function render(){
 clearError();
 const q=questions[i];
-document.getElementById("progress").textContent=`Question ${i+1} of ${questions.length}`;
-document.getElementById("nextBtn").textContent=(i===questions.length-1)?"Submit":"Next";
+const btn=document.getElementById("nextBtn");
+
+document.getElementById("progress").textContent=
+`Question ${i+1} of ${questions.length}`;
+
 document.getElementById("content").innerHTML=
 `<h2>${q.title}</h2>
 <div class="instructions">${q.instructions}</div>
 ${q.render()}`;
+
 currentStart=Date.now();
+
+if(i===questions.length-1){
+  btn.textContent="Submit";
+  btn.onclick=submitAll;
+}else{
+  btn.textContent="Next";
+  btn.onclick=next;
+}
+}
+
+function next(){
+if(isSubmitting) return;
+
+const q=questions[i];
+
+if(i===0){ startTimer(); }
+else{ endTimer(q.id); }
+
+i++;
+render();
 }
 
 async function submitAll(){
+if(isSubmitting) return;
+
 const btn=document.getElementById("nextBtn");
 isSubmitting=true;
+
+endTimer(questions[i].id);
 
 btn.disabled=true;
 btn.innerHTML=`<div class="spinner"></div> Submitting...`;
@@ -240,6 +268,7 @@ data.timing.submittedAt=new Date().toISOString();
 data.timing.totalSeconds=Math.round(
 (new Date(data.timing.submittedAt)-new Date(data.timing.startedAt))/1000
 );
+
 save();
 
 try{
@@ -255,23 +284,6 @@ btn.disabled=false;
 btn.textContent="Submit";
 showError("Submission failed. Please try again.");
 }
-}
-
-function next(){
-if(isSubmitting) return;
-
-const q=questions[i];
-
-if(i===0){ startTimer(); }
-else{ endTimer(q.id); }
-
-if(i<questions.length-1){
-i++;
-render();
-return;
-}
-
-submitAll();
 }
 
 render();
