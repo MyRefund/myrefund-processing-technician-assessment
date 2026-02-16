@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>My Refund — Processing Assessment</title>
+<title>My Refund — Processing Technician Assessment</title>
 
 <style>
 :root{ --g0:#094B35; }
@@ -43,6 +43,8 @@ h2{ margin:0 0 10px 0; font-weight:900; }
   white-space:pre-line;
 }
 
+label{ display:block; margin-top:12px; font-weight:800; font-size:14px; }
+
 textarea,input{
   width:100%;
   padding:10px;
@@ -52,6 +54,8 @@ textarea,input{
   font-family:inherit;
   font-size:14px;
 }
+
+textarea{ min-height:120px; resize:vertical; }
 
 .actions{
   display:flex;
@@ -67,34 +71,12 @@ button{
   padding:10px 26px;
   font-weight:900;
   cursor:pointer;
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
 }
-button:disabled{opacity:0.75; cursor:not-allowed;}
-
-.spinner{
-  width:16px;
-  height:16px;
-  border:3px solid rgba(9,75,53,.22);
-  border-top:3px solid var(--g0);
-  border-radius:50%;
-  animation:spin 0.8s linear infinite;
-}
-@keyframes spin{ to{ transform:rotate(360deg); } }
+button:disabled{opacity:0.7; cursor:not-allowed;}
 
 .success-screen{
   text-align:center;
   padding:40px 20px;
-}
-
-.error-banner{
-  display:none;
-  margin-top:12px;
-  padding:10px 12px;
-  border-radius:10px;
-  background:rgba(255,255,255,.14);
-  font-size:13px;
 }
 </style>
 </head>
@@ -106,7 +88,7 @@ button:disabled{opacity:0.75; cursor:not-allowed;}
     <div class="brand">
       <img src="logo.png" alt="My Refund">
       <div class="brand-text">
-        <strong>Processing Assessment</strong>
+        <strong>Processing Technician Assessment</strong>
       </div>
     </div>
   </div>
@@ -117,7 +99,6 @@ button:disabled{opacity:0.75; cursor:not-allowed;}
     <div class="card" id="card">
       <div class="progress" id="progress"></div>
       <div id="content"></div>
-      <div id="errorBanner" class="error-banner"></div>
 
       <div class="actions">
         <button id="actionBtn">Next</button>
@@ -127,13 +108,13 @@ button:disabled{opacity:0.75; cursor:not-allowed;}
 </div>
 
 <script>
-const SUBMIT_URL = "YOUR_GOOGLE_SCRIPT_URL";
-const storeKey = "processing_assessment_v2";
+const SUBMIT_URL = "https://script.google.com/macros/s/AKfycbzqt1qFnF1Qgff1O7-lWmlSIem5gEcGW8zPRhmUW6HqHtK06bRoABznXuX7EWj7vWfO/exec";
+const storeKey = "processing_technician_assessment_v3";
 
 const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
-data.testType = "Processing Assessment";
+data.testType = "Processing Technician Assessment";
 data.answers = data.answers || {};
-data.timing  = data.timing || { startedAt:null, submittedAt:null, totalSeconds:0, perQuestion:{} };
+data.timing = data.timing || { startedAt:null, submittedAt:null, totalSeconds:0, perQuestion:{} };
 
 let currentStart = null;
 let isSubmitting = false;
@@ -144,22 +125,36 @@ const questions = [
 {
 id:"details",
 title:"Candidate Details",
-instructions:"Enter your full name and email address.",
+instructions:"Please enter your full name and email address.",
 render:()=>`
-<input placeholder="Full name" value="${escape(data.name||"")}" 
-oninput="saveField('name',this.value)">
-<input placeholder="Email address" value="${escape(data.email||"")}" 
-oninput="saveField('email',this.value)">
+<input placeholder="Full name" value="${escape(data.name||"")}" oninput="saveField('name',this.value)">
+<input placeholder="Email address" value="${escape(data.email||"")}" oninput="saveField('email',this.value)">
 `
 },
 
 {
-id:"s1",
-title:"Keyboard Shortcuts",
-instructions:"What is the shortcut for Copy?",
+id:"shortcuts",
+title:"Section 1: Shortcut Keys",
+instructions:"Write the correct shortcut keys.",
 render:()=>`
-<input placeholder="Your answer" value="${escape(data.answers.copy||"")}" 
-oninput="saveAnswer('copy',this.value)">
+<label>Copy:</label>
+<input value="${escape(data.answers.copy||"")}" oninput="saveAnswer('copy',this.value)">
+
+<label>Cut:</label>
+<input value="${escape(data.answers.cut||"")}" oninput="saveAnswer('cut',this.value)">
+
+<label>Paste:</label>
+<input value="${escape(data.answers.paste||"")}" oninput="saveAnswer('paste',this.value)">
+`
+},
+
+{
+id:"writing",
+title:"Section 2: Written Communication",
+instructions:"Rewrite clearly and professionally.",
+render:()=>`
+<label>“Your refund hasn’t come yet, IRD is slow.”</label>
+<textarea oninput="saveAnswer('rewrite',this.value)">${escape(data.answers.rewrite||"")}</textarea>
 `
 }
 
@@ -172,67 +167,66 @@ function saveAnswer(k,v){ data.answers[k]=v; save(); }
 function escape(s){
 return String(s)
 .replace(/&/g,"&amp;")
-.replace(/"/g,"&quot;")
 .replace(/</g,"&lt;")
-.replace(/>/g,"&gt;");
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;");
 }
 
 function render(){
-const q=questions[i];
-const btn=document.getElementById("actionBtn");
+const q = questions[i];
+const btn = document.getElementById("actionBtn");
 
-document.getElementById("progress").textContent=
+document.getElementById("progress").textContent =
 `Question ${i+1} of ${questions.length}`;
 
-document.getElementById("content").innerHTML=
+document.getElementById("content").innerHTML =
 `<h2>${q.title}</h2>
 <div class="instructions">${q.instructions}</div>
 ${q.render()}`;
 
-currentStart=Date.now();
-
 if(i === questions.length - 1){
-  btn.textContent="Submit";
-  btn.onclick=submitAssessment;
+  btn.textContent = "Submit";
+  btn.onclick = submitAssessment;
 }else{
-  btn.textContent="Next";
-  btn.onclick=goNext;
+  btn.textContent = "Next";
+  btn.onclick = goNext;
 }
+
+currentStart = Date.now();
 }
 
 function goNext(){
 if(isSubmitting) return;
+
+if(!data.timing.startedAt){
+  data.timing.startedAt = new Date().toISOString();
+}
 
 endTimer(questions[i].id);
 i++;
 render();
 }
 
-function startTimer(){
-if(!data.timing.startedAt)
-  data.timing.startedAt=new Date().toISOString();
-}
-
 function endTimer(id){
 if(!currentStart) return;
-const sec=Math.round((Date.now()-currentStart)/1000);
-data.timing.perQuestion[id]=(data.timing.perQuestion[id]||0)+sec;
+const sec = Math.round((Date.now()-currentStart)/1000);
+data.timing.perQuestion[id] = (data.timing.perQuestion[id]||0)+sec;
 save();
 }
 
 async function submitAssessment(){
 if(isSubmitting) return;
 
-isSubmitting=true;
+isSubmitting = true;
 endTimer(questions[i].id);
 
-const btn=document.getElementById("actionBtn");
-btn.disabled=true;
-btn.innerHTML=`<div class="spinner"></div> Submitting...`;
+const btn = document.getElementById("actionBtn");
+btn.disabled = true;
+btn.textContent = "Submitting...";
 
-data.timing.submittedAt=new Date().toISOString();
-data.timing.totalSeconds=Math.round(
-(new Date(data.timing.submittedAt)-new Date(data.timing.startedAt))/1000
+data.timing.submittedAt = new Date().toISOString();
+data.timing.totalSeconds = Math.round(
+(new Date(data.timing.submittedAt) - new Date(data.timing.startedAt))/1000
 );
 
 save();
@@ -243,8 +237,9 @@ method:"POST",
 body:new URLSearchParams({payload:JSON.stringify(data)})
 });
 localStorage.removeItem(storeKey);
-document.getElementById("card").innerHTML=`
-<div class="success-screen">
+
+document.getElementById("card").innerHTML =
+`<div class="success-screen">
 <h2>Assessment Submitted ✓</h2>
 <p>Thank you for completing the assessment.</p>
 <p>We will review your submission and be in touch.</p>
@@ -257,7 +252,6 @@ alert("Submission failed. Please try again.");
 }
 }
 
-startTimer();
 render();
 </script>
 
