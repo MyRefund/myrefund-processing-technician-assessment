@@ -43,7 +43,7 @@ h2{ margin:0 0 10px 0; font-weight:900; }
   white-space:pre-line;
 }
 
-label{ display:block; margin-top:12px; font-weight:800; font-size:14px; }
+label{ display:block; margin-top:14px; font-weight:800; font-size:14px; line-height:1.4; }
 
 textarea,input{
   width:100%;
@@ -129,7 +129,6 @@ button:disabled{opacity:0.7; cursor:not-allowed;}
     <div class="card" id="card">
       <div class="progress" id="progress"></div>
       <div id="content"></div>
-
       <div class="actions">
         <button id="actionBtn">Next</button>
       </div>
@@ -139,7 +138,7 @@ button:disabled{opacity:0.7; cursor:not-allowed;}
 
 <script>
 const SUBMIT_URL = "https://script.google.com/macros/s/AKfycbzqt1qFnF1Qgff1O7-lWmlSIem5gEcGW8zPRhmUW6HqHtK06bRoABznXuX7EWj7vWfO/exec";
-const storeKey = "processing_technician_assessment_v6";
+const storeKey = "processing_technician_assessment_v7";
 
 const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
 data.testType = "Processing Technician Assessment";
@@ -181,13 +180,36 @@ render:()=>`
 {
 id:"numerical",
 title:"Section 2: Numerical Reasoning",
-instructions:"Answer clearly.",
+instructions:"Answer the following questions clearly. Show working if helpful.",
 render:()=>`
-<label>How many months did the client NOT receive benefits in the 2025 tax year?</label>
-<textarea oninput="saveAnswer('benefits',this.value)">${escape(data.answers.benefits||"")}</textarea>
+<label>
+1) A client received MSD benefit payments in:
+• June 2024  
+• September 2024  
+• January 2025  
 
-<label>Calculate total tax payable on $20,000 using the given rates.</label>
-<textarea oninput="saveAnswer('taxcalc',this.value)">${escape(data.answers.taxcalc||"")}</textarea>
+The New Zealand 2025 tax year runs from 1 April 2024 to 31 March 2025.
+
+How many months during the 2025 tax year did the client NOT receive benefits?
+</label>
+
+<textarea oninput="saveAnswer('benefits',this.value)">
+${escape(data.answers.benefits||"")}
+</textarea>
+
+<label>
+2) Sam earned $20,000 in taxable income.
+
+The tax rates are:
+• 10% on income from $0 – $10,000  
+• 20% on income above $10,000  
+
+Calculate the total tax payable.
+</label>
+
+<textarea oninput="saveAnswer('taxcalc',this.value)">
+${escape(data.answers.taxcalc||"")}
+</textarea>
 `
 },
 
