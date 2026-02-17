@@ -109,7 +109,7 @@ button:disabled{opacity:0.7; cursor:not-allowed;}
 
 <script>
 const SUBMIT_URL = "https://script.google.com/macros/s/AKfycbzqt1qFnF1Qgff1O7-lWmlSIem5gEcGW8zPRhmUW6HqHtK06bRoABznXuX7EWj7vWfO/exec";
-const storeKey = "processing_technician_assessment_v3";
+const storeKey = "processing_technician_assessment_v4";
 
 const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
 data.testType = "Processing Technician Assessment";
@@ -145,16 +145,60 @@ render:()=>`
 
 <label>Paste:</label>
 <input value="${escape(data.answers.paste||"")}" oninput="saveAnswer('paste',this.value)">
+
+<label>Select All:</label>
+<input value="${escape(data.answers.selectall||"")}" oninput="saveAnswer('selectall',this.value)">
+`
+},
+
+{
+id:"numerical",
+title:"Section 2: Numerical Reasoning",
+instructions:"Answer the following questions clearly.",
+render:()=>`
+<label>1) A client received MSD benefit in June 2024, September 2024 and January 2024.  
+How many months did they NOT receive benefits in the 2025 tax year?</label>
+<textarea oninput="saveAnswer('benefits',this.value)">${escape(data.answers.benefits||"")}</textarea>
+
+<label>2) Sam earned $20,000 in taxable income.  
+10% on income from $0–$10,000  
+20% on income above $10,000  
+Calculate the total tax payable.</label>
+<textarea oninput="saveAnswer('taxcalc',this.value)">${escape(data.answers.taxcalc||"")}</textarea>
 `
 },
 
 {
 id:"writing",
-title:"Section 2: Written Communication",
+title:"Section 3: Written Communication",
 instructions:"Rewrite clearly and professionally.",
 render:()=>`
-<label>“Your refund hasn’t come yet, IRD is slow.”</label>
-<textarea oninput="saveAnswer('rewrite',this.value)">${escape(data.answers.rewrite||"")}</textarea>
+<label>1) “Your refund hasn’t come yet, IRD is just slow.”</label>
+<textarea oninput="saveAnswer('rewrite1',this.value)">${escape(data.answers.rewrite1||"")}</textarea>
+
+<label>2) “Oops, the tax codes were off, that’s why there’s a bill.”</label>
+<textarea oninput="saveAnswer('rewrite2',this.value)">${escape(data.answers.rewrite2||"")}</textarea>
+`
+},
+
+{
+id:"technical",
+title:"Section 4: Technical Tax Knowledge",
+instructions:"Answer the following questions.",
+render:()=>`
+<label>1) When does the 2026 New Zealand tax year start and end?</label>
+<textarea oninput="saveAnswer('taxyear',this.value)">${escape(data.answers.taxyear||"")}</textarea>
+
+<label>2) A client earns income only from salaries.  
+Which expenses can they claim?</label>
+<textarea oninput="saveAnswer('salary_expenses',this.value)">${escape(data.answers.salary_expenses||"")}</textarea>
+
+<label>3) Which types of income must be declared to IRD?</label>
+<textarea oninput="saveAnswer('income_types',this.value)">${escape(data.answers.income_types||"")}</textarea>
+
+<label>4) A client earned $150 from a cash job during the tax year.  
+Should this income be declared?</label>
+<textarea oninput="saveAnswer('cash_declared',this.value)">${escape(data.answers.cash_declared||"")}</textarea>
 `
 }
 
