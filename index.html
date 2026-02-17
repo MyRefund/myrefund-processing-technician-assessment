@@ -57,8 +57,34 @@ textarea,input{
 
 textarea{ min-height:120px; resize:vertical; }
 
+/* === Multiple Choice Styling === */
+
+.choice-group{
+  margin-top:10px;
+  padding:14px 16px;
+  background:rgba(255,255,255,.08);
+  border-radius:12px;
+}
+
 .choice{
-  margin:6px 0;
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  padding:6px 0;
+  font-size:14px;
+  line-height:1.4;
+}
+
+.choice input{
+  width:auto;
+  margin-top:3px;
+  transform:scale(1.1);
+}
+
+.choice label{
+  font-weight:500;
+  margin:0;
+  cursor:pointer;
 }
 
 .actions{
@@ -113,7 +139,7 @@ button:disabled{opacity:0.7; cursor:not-allowed;}
 
 <script>
 const SUBMIT_URL = "https://script.google.com/macros/s/AKfycbzqt1qFnF1Qgff1O7-lWmlSIem5gEcGW8zPRhmUW6HqHtK06bRoABznXuX7EWj7vWfO/exec";
-const storeKey = "processing_technician_assessment_v5";
+const storeKey = "processing_technician_assessment_v6";
 
 const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
 data.testType = "Processing Technician Assessment";
@@ -187,22 +213,28 @@ render:()=>`
 <textarea oninput="saveAnswer('taxyear',this.value)">${escape(data.answers.taxyear||"")}</textarea>
 
 <label>Which expenses can salary-only clients claim?</label>
-${checkbox("salary_expenses","Income protection insurance premiums")}
-${checkbox("salary_expenses","Rent")}
-${checkbox("salary_expenses","Tax agent fees")}
-${checkbox("salary_expenses","Fuel expenses from home to work")}
-${checkbox("salary_expenses","Mortgage payments")}
+<div class="choice-group">
+  ${checkbox("salary_expenses","Income protection insurance premiums")}
+  ${checkbox("salary_expenses","Rent")}
+  ${checkbox("salary_expenses","Tax agent fees")}
+  ${checkbox("salary_expenses","Fuel expenses from home to work")}
+  ${checkbox("salary_expenses","Mortgage payments")}
+</div>
 
 <label>Which income types must be declared?</label>
-${checkbox("income_types","Gifts from friends")}
-${checkbox("income_types","Self-employment income")}
-${checkbox("income_types","Lottery winnings")}
-${checkbox("income_types","Overseas income")}
-${checkbox("income_types","Rental income")}
+<div class="choice-group">
+  ${checkbox("income_types","Gifts from friends")}
+  ${checkbox("income_types","Self-employment income")}
+  ${checkbox("income_types","Lottery winnings")}
+  ${checkbox("income_types","Overseas income")}
+  ${checkbox("income_types","Rental income")}
+</div>
 
 <label>Should $150 cash income be declared?</label>
-${radio("cash_declared","Yes")}
-${radio("cash_declared","No")}
+<div class="choice-group">
+  ${radio("cash_declared","Yes")}
+  ${radio("cash_declared","No")}
+</div>
 `
 }
 
@@ -224,17 +256,25 @@ save();
 function checkbox(key,label){
 const cur = Array.isArray(data.answers[key]) ? data.answers[key] : [];
 const checked = cur.includes(label) ? "checked" : "";
-return `<div class="choice">
-<label><input type="checkbox" ${checked}
-onchange="toggleInArray('${key}','${label}',this.checked)"> ${label}</label>
+return `
+<div class="choice">
+<label>
+<input type="checkbox" ${checked}
+onchange="toggleInArray('${key}','${label}',this.checked)">
+${label}
+</label>
 </div>`;
 }
 
 function radio(key,label){
 const checked = data.answers[key] === label ? "checked" : "";
-return `<div class="choice">
-<label><input type="radio" name="${key}" ${checked}
-onclick="saveAnswer('${key}','${label}')"> ${label}</label>
+return `
+<div class="choice">
+<label>
+<input type="radio" name="${key}" ${checked}
+onclick="saveAnswer('${key}','${label}')">
+${label}
+</label>
 </div>`;
 }
 
