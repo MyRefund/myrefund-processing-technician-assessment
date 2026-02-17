@@ -57,6 +57,10 @@ textarea,input{
 
 textarea{ min-height:120px; resize:vertical; }
 
+.choice{
+  margin:6px 0;
+}
+
 .actions{
   display:flex;
   justify-content:flex-end;
@@ -109,7 +113,7 @@ button:disabled{opacity:0.7; cursor:not-allowed;}
 
 <script>
 const SUBMIT_URL = "https://script.google.com/macros/s/AKfycbzqt1qFnF1Qgff1O7-lWmlSIem5gEcGW8zPRhmUW6HqHtK06bRoABznXuX7EWj7vWfO/exec";
-const storeKey = "processing_technician_assessment_v4";
+const storeKey = "processing_technician_assessment_v5";
 
 const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
 data.testType = "Processing Technician Assessment";
@@ -139,13 +143,10 @@ instructions:"Write the correct shortcut keys.",
 render:()=>`
 <label>Copy:</label>
 <input value="${escape(data.answers.copy||"")}" oninput="saveAnswer('copy',this.value)">
-
 <label>Cut:</label>
 <input value="${escape(data.answers.cut||"")}" oninput="saveAnswer('cut',this.value)">
-
 <label>Paste:</label>
 <input value="${escape(data.answers.paste||"")}" oninput="saveAnswer('paste',this.value)">
-
 <label>Select All:</label>
 <input value="${escape(data.answers.selectall||"")}" oninput="saveAnswer('selectall',this.value)">
 `
@@ -154,16 +155,12 @@ render:()=>`
 {
 id:"numerical",
 title:"Section 2: Numerical Reasoning",
-instructions:"Answer the following questions clearly.",
+instructions:"Answer clearly.",
 render:()=>`
-<label>1) A client received MSD benefit in June 2024, September 2024 and January 2024.  
-How many months did they NOT receive benefits in the 2025 tax year?</label>
+<label>How many months did the client NOT receive benefits in the 2025 tax year?</label>
 <textarea oninput="saveAnswer('benefits',this.value)">${escape(data.answers.benefits||"")}</textarea>
 
-<label>2) Sam earned $20,000 in taxable income.  
-10% on income from $0–$10,000  
-20% on income above $10,000  
-Calculate the total tax payable.</label>
+<label>Calculate total tax payable on $20,000 using the given rates.</label>
 <textarea oninput="saveAnswer('taxcalc',this.value)">${escape(data.answers.taxcalc||"")}</textarea>
 `
 },
@@ -184,21 +181,28 @@ render:()=>`
 {
 id:"technical",
 title:"Section 4: Technical Tax Knowledge",
-instructions:"Answer the following questions.",
+instructions:"Answer the following.",
 render:()=>`
-<label>1) When does the 2026 New Zealand tax year start and end?</label>
+<label>When does the 2026 NZ tax year start and end?</label>
 <textarea oninput="saveAnswer('taxyear',this.value)">${escape(data.answers.taxyear||"")}</textarea>
 
-<label>2) A client earns income only from salaries.  
-Which expenses can they claim?</label>
-<textarea oninput="saveAnswer('salary_expenses',this.value)">${escape(data.answers.salary_expenses||"")}</textarea>
+<label>Which expenses can salary-only clients claim?</label>
+${checkbox("salary_expenses","Income protection insurance premiums")}
+${checkbox("salary_expenses","Rent")}
+${checkbox("salary_expenses","Tax agent fees")}
+${checkbox("salary_expenses","Fuel expenses from home to work")}
+${checkbox("salary_expenses","Mortgage payments")}
 
-<label>3) Which types of income must be declared to IRD?</label>
-<textarea oninput="saveAnswer('income_types',this.value)">${escape(data.answers.income_types||"")}</textarea>
+<label>Which income types must be declared?</label>
+${checkbox("income_types","Gifts from friends")}
+${checkbox("income_types","Self-employment income")}
+${checkbox("income_types","Lottery winnings")}
+${checkbox("income_types","Overseas income")}
+${checkbox("income_types","Rental income")}
 
-<label>4) A client earned $150 from a cash job during the tax year.  
-Should this income be declared?</label>
-<textarea oninput="saveAnswer('cash_declared',this.value)">${escape(data.answers.cash_declared||"")}</textarea>
+<label>Should $150 cash income be declared?</label>
+${radio("cash_declared","Yes")}
+${radio("cash_declared","No")}
 `
 }
 
@@ -207,6 +211,32 @@ Should this income be declared?</label>
 function save(){ localStorage.setItem(storeKey, JSON.stringify(data)); }
 function saveField(k,v){ data[k]=v; save(); }
 function saveAnswer(k,v){ data.answers[k]=v; save(); }
+
+function toggleInArray(key,value,checked){
+const arr = Array.isArray(data.answers[key]) ? data.answers[key] : [];
+const index = arr.indexOf(value);
+if(checked && index === -1) arr.push(value);
+if(!checked && index !== -1) arr.splice(index,1);
+data.answers[key] = arr;
+save();
+}
+
+function checkbox(key,label){
+const cur = Array.isArray(data.answers[key]) ? data.answers[key] : [];
+const checked = cur.includes(label) ? "checked" : "";
+return `<div class="choice">
+<label><input type="checkbox" ${checked}
+onchange="toggleInArray('${key}','${label}',this.checked)"> ${label}</label>
+</div>`;
+}
+
+function radio(key,label){
+const checked = data.answers[key] === label ? "checked" : "";
+return `<div class="choice">
+<label><input type="radio" name="${key}" ${checked}
+onclick="saveAnswer('${key}','${label}')"> ${label}</label>
+</div>`;
+}
 
 function escape(s){
 return String(s)
